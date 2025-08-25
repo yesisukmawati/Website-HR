@@ -2,7 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth"
-import { supabase, type Notification } from "@/lib/supabase"
+// --- PERBAIKAN: Impor fungsi secara langsung ---
+import { getNotifications, markNotificationAsRead, type Notification } from "@/lib/supabase"
+// Kita tidak perlu mengimpor 'supabase' client di sini lagi
 
 interface NotificationContextType {
   notifications: Notification[]
@@ -22,7 +24,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (user) {
       const fetchNotifications = async () => {
         try {
-          const data = await supabase.getNotifications(user.id)
+          // --- PERBAIKAN: Panggil fungsi langsung ---
+          const data = await getNotifications(user.id)
           setNotifications(data)
         } catch (error) {
           console.error("Failed to fetch notifications:", error)
@@ -33,25 +36,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  const markAsRead = async (id: string) => {
+  const handleMarkAsRead = async (id: string) => {
     try {
-      await supabase.markNotificationAsRead(id)
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
+      // --- PERBAIKAN: Panggil fungsi langsung ---
+      await markNotificationAsRead(id)
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true, isRead: true } : n)))
     } catch (error) {
       console.error("Failed to mark notification as read:", error)
     }
   }
 
-  const markAllAsRead = async () => {
+  const handleMarkAllAsRead = async () => {
     try {
-      const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
-      await Promise.all(unreadIds.map((id) => supabase.markNotificationAsRead(id)))
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+      const unreadIds = notifications.filter((n) => !n.isRead).map((n) => n.id)
+      // --- PERBAIKAN: Panggil fungsi langsung dalam loop ---
+      await Promise.all(unreadIds.map((id) => markNotificationAsRead(id)))
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true, isRead: true })))
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error)
     }
   }
 
+  // Fungsi addNotification ini hanya untuk simulasi, jadi tidak perlu diubah
   const addNotification = (notification: Omit<Notification, "id" | "created_at">) => {
     const newNotification: Notification = {
       ...notification,
@@ -61,13 +67,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => [newNotification, ...prev])
   }
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const value: NotificationContextType = {
     notifications,
     unreadCount,
-    markAsRead,
-    markAllAsRead,
+    markAsRead: handleMarkAsRead,
+    markAllAsRead: handleMarkAllAsRead,
     addNotification,
   }
 

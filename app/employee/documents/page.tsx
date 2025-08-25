@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -18,7 +17,7 @@ import {
 import { EmployeeSidebar } from "../../components/employee/employee-sidebar"
 import { EmployeeHeader } from "../../components/employee/employee-header"
 import { useToast } from "@/hooks/use-toast"
-import { supabase, type Document } from "@/lib/supabase"
+import { getDocuments, type Document } from "@/lib/supabase"
 
 export default function EmployeeDocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -31,9 +30,14 @@ export default function EmployeeDocumentsPage() {
   useEffect(() => {
     const fetchDocuments = async () => {
         setLoading(true);
-        const data = await supabase.getDocuments();
-        setDocuments(data);
-        setLoading(false);
+        try {
+            const data = await getDocuments();
+            setDocuments(data);
+        } catch(error) {
+            toast.error("Error", { description: "Could not fetch documents." });
+        } finally {
+            setLoading(false);
+        }
     };
     fetchDocuments();
   }, []);
@@ -41,7 +45,7 @@ export default function EmployeeDocumentsPage() {
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch =
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchTerm.toLowerCase());
+      (doc.description && doc.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -64,9 +68,14 @@ export default function EmployeeDocumentsPage() {
   };
 
   const handleDownload = (doc: Document) => {
+    if (!doc.file_url) {
+        toast.error("Error", { description: "File URL not found." });
+        return;
+    }
     toast.info("Download Started", { description: `Downloading ${doc.name}...` });
     const link = document.createElement('a');
-    link.href = doc.url;
+    link.href = doc.file_url;
+    link.setAttribute('target', '_blank');
     link.setAttribute('download', doc.name || 'download');
     document.body.appendChild(link);
     link.click();
@@ -84,7 +93,7 @@ export default function EmployeeDocumentsPage() {
   const stats = {
     totalDocuments: documents.length,
     categories: categories.length,
-    totalDownloads: documents.reduce((sum, doc) => sum + doc.downloadCount, 0),
+    totalDownloads: documents.reduce((sum, doc) => sum + (doc.downloadCount || 0), 0),
     recentUploads: documents.filter((doc) => {
       const uploadDate = new Date(doc.uploadDate);
       const weekAgo = new Date();
@@ -99,7 +108,6 @@ export default function EmployeeDocumentsPage() {
       <div className="flex-1 p-6">
         <EmployeeHeader title="Company Documents" subtitle="Access and download company documents and resources" />
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
            <Card>
             <CardContent className="p-6">
@@ -147,9 +155,9 @@ export default function EmployeeDocumentsPage() {
           </Card>
         </div>
 
-        {/* Search and Filter */}
         <Card className="mb-6">
           <CardHeader>
+            {/* --- PERBAIKAN DI SINI --- */}
             <CardTitle>Document Library</CardTitle>
             <CardDescription>Browse and access company documents</CardDescription>
           </CardHeader>
@@ -182,7 +190,6 @@ export default function EmployeeDocumentsPage() {
               </Select>
             </div>
 
-            {/* Documents Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredDocuments.map((doc) => (
                 <Card key={doc.id} className="hover:shadow-lg transition-shadow">
@@ -203,7 +210,7 @@ export default function EmployeeDocumentsPage() {
                     <p className="text-sm text-gray-600 mb-4 line-clamp-2">{doc.description}</p>
 
                     <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                      <span>Uploaded: {doc.uploadDate}</span>
+                      <span>Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}</span>
                       <span>{doc.downloadCount} downloads</span>
                     </div>
 
@@ -242,10 +249,11 @@ export default function EmployeeDocumentsPage() {
           {selectedDocument && (
             <>
               <DialogHeader>
+                 {/* --- PERBAIKAN DI SINI --- */}
                 <DialogTitle>{selectedDocument.name}</DialogTitle>
                 <DialogDescription>Document details and preview</DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 pt-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Type:</p>
@@ -261,7 +269,7 @@ export default function EmployeeDocumentsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-700">Upload Date:</p>
-                    <p className="text-sm text-gray-600">{selectedDocument.uploadDate}</p>
+                    <p className="text-sm text-gray-600">{new Date(selectedDocument.uploadDate).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div>

@@ -1,3 +1,14 @@
+import { createClient } from "@supabase/supabase-js"
+
+// --- PASTIKAN ANDA SUDAH MEMBUAT FILE .env.local ---
+// --- DAN MENGISINYA DENGAN URL & KUNCI ANON DARI SUPABASE ---
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Membuat client Supabase yang akan digunakan di seluruh aplikasi
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// --- INTERFACE (Tipe Data) - Tetap sama ---
 export interface User {
   id: string
   email: string
@@ -88,144 +99,200 @@ export interface Notification {
   metadata?: Record<string, any>;
 }
 
-// --- MOCK DATA ---
-const mockUsers: User[] = [
-  { id: "admin-1", email: "admin@company.com", name: "Admin User", role: "admin", avatar: "AU", position: "System Administrator", department: "IT" },
-  { id: "emp-1", email: "john.doe@company.com", name: "John Doe", role: "employee", avatar: "JD", position: "Software Developer", department: "Engineering", employee_id: "EMP001" },
-  { id: "emp-2", email: "jane.smith@company.com", name: "Jane Smith", role: "employee", avatar: "JS", position: "UI/UX Designer", department: "Design", employee_id: "EMP002" },
-];
-const mockEmployees: Employee[] = [
-    { id: "emp-1", employee_id: "EMP001", name: "John Doe", email: "john.doe@company.com", position: "Software Developer", department: "Engineering", hire_date: "2023-01-15", phone: "+62 812-3456-7890", address: "Jakarta, Indonesia", avatar: "JD", status: "active", created_at: "2023-01-15T00:00:00Z", updated_at: "2023-01-15T00:00:00Z" },
-    { id: "emp-2", employee_id: "EMP002", name: "Jane Smith", email: "jane.smith@company.com", position: "UI/UX Designer", department: "Design", hire_date: "2023-02-01", phone: "+62 813-4567-8901", address: "Bandung, Indonesia", avatar: "JS", status: "active", created_at: "2023-02-01T00:00:00Z", updated_at: "2023-02-01T00:00:00Z" },
-];
-const mockLeaveRequests: LeaveRequest[] = [
-    { id: "leave-1", employee_id: "emp-1", employee_name: "John Doe", leave_type: "annual", start_date: "2024-01-15", end_date: "2024-01-17", days_requested: 3, reason: "Family vacation", status: "approved", approved_by: "admin-1", approved_at: "2024-01-10T10:00:00Z", comments: "Approved for family vacation", created_at: "2024-01-08T09:00:00Z", updated_at: "2024-01-10T10:00:00Z" },
-];
-const mockAttendance: AttendanceRecord[] = [
-    { id: "att-1", employee_id: "emp-1", employee_name: "John Doe", date: "2024-01-08", check_in: "09:00:00", check_out: "17:30:00", status: "present", hours_worked: 8.5, overtime_hours: 0.5, created_at: "2024-01-08T09:00:00Z", updated_at: "2024-01-08T17:30:00Z" },
-];
-const mockNotifications: Notification[] = [
-    { id: "notif-1", user_id: "emp-1", title: "Leave Request Approved", message: "Your annual leave request for Jan 15-17 has been approved", type: "success", read: false, action_url: "/employee/leave", created_at: "2024-01-10T10:00:00Z", employeeName: "John Doe", isRead: false, },
-];
 
-// --- PENGELOLAAN DATA DOKUMEN (DATABASE TIRUAN) ---
-const seedDocuments: Document[] = [
-    { id: 1, name: "Employee Handbook 2025.pdf", category: "HR", size: "2.5 MB", uploadedBy: "Admin", uploadDate: "2025-01-08", type: "pdf", downloadCount: 45, description: "Complete employee handbook with company policies and procedures.", url: "/documents/employee-handbook-2025.pdf", file_url: "/documents/employee-handbook-2025.pdf", title: "Employee Handbook 2025" },
-    { id: 2, name: "Company Policy.docx", category: "Legal", size: "1.2 MB", uploadedBy: "HR Manager", uploadDate: "2025-01-07", type: "doc", downloadCount: 23, description: "Official company-wide policies and regulations.", url: "/documents/company-policy.docx", file_url: "/documents/company-policy.docx", title: "Company Policy" },
-];
+// --- FUNGSI-FUNGSI ASLI SUPABASE ---
 
-const getStoredDocuments = (): Document[] => {
-  try {
-    const stored = localStorage.getItem("mock_documents");
-    if (stored) return JSON.parse(stored);
-    localStorage.setItem("mock_documents", JSON.stringify(seedDocuments));
-    return seedDocuments;
-  } catch (error) { return seedDocuments; }
-};
+// Note: Fungsi untuk otentikasi (login, logout, getUser) sudah disediakan
+// oleh `supabase.auth`, jadi kita tidak perlu membuatnya lagi di sini.
+// Cukup panggil `supabase.auth.signInWithPassword(...)` dll di komponen Anda.
 
-const setStoredDocuments = (documents: Document[]) => {
-  try {
-    localStorage.setItem("mock_documents", JSON.stringify(documents));
-  } catch (error) { console.error("Could not save to localStorage", error); }
-};
 
-// --- MOCK SUPABASE CLIENT ---
-export const supabase = {
-  auth: {
-    async signInWithPassword({ email, password }: { email: string; password: string }) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const user = mockUsers.find(u => u.email === email);
-      if (user && (password === "admin123" || password === "employee123")) {
-        localStorage.setItem("supabase_user", JSON.stringify(user));
-        return { data: { user, session: {} }, error: null };
-      }
-      return { data: null, error: new Error("Invalid credentials") };
-    },
-    async signOut() {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      localStorage.removeItem("supabase_user");
-      return { error: null };
-    },
-    async getUser() {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      const stored = localStorage.getItem("supabase_user");
-      const user = stored ? JSON.parse(stored) : null;
-      return { data: { user }, error: null };
-    },
-    onAuthStateChange(callback: (event: string, session: any | null) => void) {
-      const stored = localStorage.getItem("supabase_user");
-      const user = stored ? JSON.parse(stored) : null;
-      const session = user ? { user } : null;
-      callback("INITIAL_SESSION", session);
-      return { data: { subscription: { unsubscribe: () => {} } } };
-    },
-  },
+// --- FUNGSI UNTUK INTERAKSI DENGAN TABEL ---
 
-  // --- SEMUA FUNGSI DATA YANG DIKEMBALIKAN ---
-  async getEmployees(): Promise<Employee[]> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return [...mockEmployees];
-  },
-  async getEmployee(id: string): Promise<Employee | null> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return mockEmployees.find(e => e.id === id) || null;
-  },
-  async getLeaveRequests(employeeId?: string): Promise<LeaveRequest[]> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    if (employeeId) return mockLeaveRequests.filter(lr => lr.employee_id === employeeId);
-    return [...mockLeaveRequests];
-  },
-  async submitLeaveRequest(request: Omit<LeaveRequest, "id" | "created_at" | "updated_at">): Promise<LeaveRequest> {
-    const newRequest: LeaveRequest = { ...request, id: `leave-${Date.now()}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-    mockLeaveRequests.unshift(newRequest);
-    return newRequest;
-  },
-  async getAttendanceRecords(employeeId?: string): Promise<AttendanceRecord[]> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    if (employeeId) return mockAttendance.filter(a => a.employee_id === employeeId);
-    return [...mockAttendance];
-  },
-  async checkIn(employeeId: string): Promise<AttendanceRecord> {
-    const now = new Date();
-    const record: AttendanceRecord = { id: `att-${Date.now()}`, employee_id: employeeId, employee_name: mockEmployees.find(e => e.id === employeeId)?.name || "Unknown", date: now.toISOString().split("T")[0], check_in: now.toTimeString().split(" ")[0], check_out: null, status: now.getHours() > 9 ? "late" : "present", created_at: now.toISOString(), updated_at: now.toISOString() };
-    mockAttendance.unshift(record);
-    return record;
-  },
-  async checkOut(employeeId: string): Promise<AttendanceRecord> {
-    const now = new Date();
-    const todayRecord = mockAttendance.find(a => a.employee_id === employeeId && a.date === now.toISOString().split("T")[0] && !a.check_out);
-    if (todayRecord && todayRecord.check_in) {
-      todayRecord.check_out = now.toTimeString().split(" ")[0];
-      const checkInTime = new Date(`1970-01-01T${todayRecord.check_in}`);
-      const diffMs = now.getTime() - checkInTime.getTime();
-      todayRecord.hours_worked = Math.round((diffMs / 3600000) * 100) / 100;
-      return todayRecord;
+export async function getEmployees(): Promise<Employee[]> {
+  const { data, error } = await supabase.from('employees').select('*');
+  if (error) {
+    console.error("Error fetching employees:", error.message);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function getEmployee(id: string): Promise<Employee | null> {
+    const { data, error } = await supabase.from('employees').select('*').eq('id', id).single();
+    if (error) {
+        console.error("Error fetching employee:", error.message);
+        throw error;
     }
-    throw new Error("No check-in record found for today");
-  },
-  async getDocuments(): Promise<Document[]> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return getStoredDocuments();
-  },
-  async uploadDocument(docData: Omit<Document, 'id' | 'downloadCount' | 'uploadDate'>): Promise<Document> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const currentDocs = getStoredDocuments();
-    const newDoc: Document = { ...docData, id: Date.now(), downloadCount: 0, uploadDate: new Date().toISOString().split("T")[0] };
-    setStoredDocuments([newDoc, ...currentDocs]);
-    return newDoc;
-  },
-  async deleteDocument(docId: number): Promise<{ success: boolean }> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setStoredDocuments(getStoredDocuments().filter(d => d.id !== docId));
+    return data;
+}
+
+export async function getLeaveRequests(employeeId?: string): Promise<LeaveRequest[]> {
+    let query = supabase.from('leave_requests').select('*');
+    if (employeeId) {
+        query = query.eq('employee_id', employeeId);
+    }
+    const { data, error } = await query;
+    if (error) {
+        console.error("Error fetching leave requests:", error.message);
+        throw error;
+    }
+    return data || [];
+}
+
+export async function submitLeaveRequest(request: Omit<LeaveRequest, "id" | "created_at" | "updated_at">): Promise<LeaveRequest> {
+    const { data, error } = await supabase.from('leave_requests').insert(request).select().single();
+    if (error) {
+        console.error("Error submitting leave request:", error.message);
+        throw error;
+    }
+    return data;
+}
+
+export async function getAttendanceRecords(employeeId?: string): Promise<AttendanceRecord[]> {
+    let query = supabase.from('attendance').select('*');
+    if (employeeId) {
+        query = query.eq('employee_id', employeeId);
+    }
+    const { data, error } = await query.order('date', { ascending: false });
+    if (error) {
+        console.error("Error fetching attendance records:", error.message);
+        throw error;
+    }
+    return data || [];
+}
+
+export async function checkIn(employeeId: string, employeeName: string): Promise<AttendanceRecord> {
+    const now = new Date();
+    const status = now.getHours() > 9 ? "late" : "present"; // Logika sederhana untuk status 'late'
+
+    const { data, error } = await supabase.from('attendance').insert({
+        employee_id: employeeId,
+        employee_name: employeeName,
+        check_in: now.toISOString(),
+        status: status,
+    }).select().single();
+
+    if (error) {
+        console.error("Error during check-in:", error.message);
+        throw error;
+    }
+    return data;
+}
+
+
+export async function checkOut(attendanceId: string): Promise<AttendanceRecord> {
+    const now = new Date();
+    // Pertama, ambil data check_in untuk menghitung jam kerja
+    const { data: currentRecord, error: fetchError } = await supabase
+        .from('attendance')
+        .select('check_in')
+        .eq('id', attendanceId)
+        .single();
+
+    if (fetchError || !currentRecord) {
+        console.error("Could not find record to check out:", fetchError?.message);
+        throw new Error("Could not find record to check out.");
+    }
+
+    const checkInTime = new Date(currentRecord.check_in);
+    const diffMs = now.getTime() - checkInTime.getTime();
+    const hoursWorked = parseFloat((diffMs / 3600000).toFixed(2)); // Milidetik ke jam
+
+    const { data, error } = await supabase
+        .from('attendance')
+        .update({
+            check_out: now.toISOString(),
+            hours_worked: hoursWorked,
+        })
+        .eq('id', attendanceId)
+        .select()
+        .single();
+    
+    if (error) {
+        console.error("Error during check-out:", error.message);
+        throw error;
+    }
+    return data;
+}
+
+
+export async function getDocuments(): Promise<Document[]> {
+    const { data, error } = await supabase.from('documents').select('*');
+    if (error) {
+        console.error("Error fetching documents:", error.message);
+        throw error;
+    }
+    return data || [];
+}
+
+export async function uploadDocument(file: File, docData: Omit<Document, 'id' | 'url' | 'file_url' | 'name' | 'size' | 'type' | 'uploadDate' | 'downloadCount'>): Promise<Document> {
+    // 1. Upload file ke Storage
+    const filePath = `${docData.category}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage.from('company_documents').upload(filePath, file);
+
+    if (uploadError) {
+        console.error("Error uploading file to storage:", uploadError.message);
+        throw uploadError;
+    }
+
+    // 2. Dapatkan URL publik dari file yang diupload
+    const { data: { publicUrl } } = supabase.storage.from('company_documents').getPublicUrl(filePath);
+
+    // 3. Simpan metadata ke tabel 'documents'
+    const { data, error } = await supabase.from('documents').insert({
+        ...docData,
+        name: file.name,
+        file_url: publicUrl,
+        url: publicUrl, // Anda mungkin ingin membedakan ini nanti
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        type: file.type || 'unknown',
+        uploadDate: new Date().toISOString(),
+        downloadCount: 0,
+    }).select().single();
+    
+    if (error) {
+        console.error("Error saving document metadata:", error.message);
+        throw error;
+    }
+    
+    return data;
+}
+
+export async function deleteDocument(docId: number): Promise<{ success: boolean }> {
+    // Optional: Hapus juga file dari storage jika diperlukan
+    const { data: doc, error: fetchError } = await supabase.from('documents').select('file_url').eq('id', docId).single();
+    if (fetchError) {
+        console.error("Could not fetch document to delete:", fetchError.message);
+        // Lanjutkan untuk menghapus record DB
+    }
+    if (doc) {
+        // Ekstrak path file dari URL
+        const filePath = doc.file_url.split('/company_documents/')[1];
+        await supabase.storage.from('company_documents').remove([filePath]);
+    }
+    
+    const { error } = await supabase.from('documents').delete().eq('id', docId);
+    if (error) {
+        console.error("Error deleting document:", error.message);
+        return { success: false };
+    }
     return { success: true };
-  },
-  async getNotifications(userId?: string): Promise<Notification[]> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    if (userId) return mockNotifications.filter(n => n.user_id === userId);
-    return [...mockNotifications];
-  },
-  async markNotificationAsRead(notificationId: string): Promise<void> {
-    const notification = mockNotifications.find(n => n.id === notificationId);
-    if (notification) notification.read = true;
-  },
-};
+}
+
+export async function getNotifications(userId: string): Promise<Notification[]> {
+    const { data, error } = await supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+    if (error) {
+        console.error("Error fetching notifications:", error.message);
+        throw error;
+    }
+    return data || [];
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+    const { error } = await supabase.from('notifications').update({ read: true, isRead: true }).eq('id', notificationId);
+    if (error) {
+        console.error("Error marking notification as read:", error.message);
+        throw error;
+    }
+}

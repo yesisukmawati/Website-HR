@@ -1,222 +1,25 @@
-// "use client"
-
-// import { useState, useEffect } from "react"
-// import { supabase } from "@/lib/supabase"
-
-// // ---------- Generic Hook ----------
-// export function useSupabaseData() {
-//   const [loading, setLoading] = useState(false)
-//   const [error, setError] = useState<string | null>(null)
-
-//   const handleAsync = async (operation: () => Promise<any>): Promise<any | null> => {
-//     try {
-//       setLoading(true)
-//       setError(null)
-//       const result = await operation()
-//       return result
-//     } catch (err) {
-//       setError(err instanceof Error ? err.message : "An error occurred")
-//       return null
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   return {
-//     loading,
-//     error,
-//     handleAsync,
-//   }
-// }
-
-// // ---------- Employees ----------
-// export function useEmployees() {
-//   const [employees, setEmployees] = useState([])
-//   const [loading, setLoading] = useState(true)
-//   const [error, setError] = useState<string | null>(null)
-
-//   useEffect(() => {
-//     const fetchEmployees = async () => {
-//       try {
-//         const { data } = await supabase.getEmployees()
-//         setEmployees(data)
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "Failed to fetch employees")
-//       } finally {
-//         setLoading(false)
-//       }
-//     }
-
-//     fetchEmployees()
-//   }, [])
-
-//   return { employees, loading, error, refetch: () => setLoading(true) }
-// }
-
-// // ---------- Leave Requests ----------
-// export function useLeaveRequests(employeeId?: string) {
-//   const [leaveRequests, setLeaveRequests] = useState([])
-//   const [loading, setLoading] = useState(true)
-//   const [error, setError] = useState<string | null>(null)
-
-//   useEffect(() => {
-//     const fetchLeaveRequests = async () => {
-//       try {
-//         const { data } = await supabase.from("leave_requests").select().eq("employee_id", employeeId)
-//         setLeaveRequests(data)
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "Failed to fetch leave requests")
-//       } finally {
-//         setLoading(false)
-//       }
-//     }
-
-//     fetchLeaveRequests()
-//   }, [employeeId])
-
-//   const submitLeaveRequest = async (request: any) => {
-//     try {
-//       setLoading(true)
-//       const { data } = await supabase.from("leave_requests").insert([request])
-//       setLeaveRequests((prev) => [data[0], ...prev])
-//       return data[0]
-//     } catch (err) {
-//       setError(err instanceof Error ? err.message : "Failed to submit leave request")
-//       return null
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   return { leaveRequests, loading, error, submitLeaveRequest }
-// }
-
-// // ---------- Attendance ----------
-// export function useAttendance(employeeId?: string) {
-//   const [attendance, setAttendance] = useState([])
-//   const [loading, setLoading] = useState(true)
-//   const [error, setError] = useState<string | null>(null)
-
-//   useEffect(() => {
-//     const fetchAttendance = async () => {
-//       try {
-//         const { data } = await supabase.from("attendance").select().eq("employee_id", employeeId)
-//         setAttendance(data)
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "Failed to fetch attendance")
-//       } finally {
-//         setLoading(false)
-//       }
-//     }
-
-//     fetchAttendance()
-//   }, [employeeId])
-
-//   const checkIn = async (employeeId: string) => {
-//     try {
-//       setLoading(true)
-//       const { data } = await supabase.from("attendance").insert([{ employee_id: employeeId, check_in: new Date() }])
-//       setAttendance((prev) => [data[0], ...prev])
-//       return data[0]
-//     } catch (err) {
-//       setError(err instanceof Error ? err.message : "Failed to check in")
-//       return null
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   const checkOut = async (employeeId: string) => {
-//     try {
-//       setLoading(true)
-//       const { data } = await supabase
-//         .from("attendance")
-//         .update({ check_out: new Date() })
-//         .eq("employee_id", employeeId)
-//         .select()
-//       setAttendance((prev) => prev.map((a) => (a.id === data[0].id ? data[0] : a)))
-//       return data[0]
-//     } catch (err) {
-//       setError(err instanceof Error ? err.message : "Failed to check out")
-//       return null
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   return { attendance, loading, error, checkIn, checkOut }
-// }
-
-// // ---------- Documents ----------
-// export function useDocuments() {
-//   const [documents, setDocuments] = useState([])
-//   const [loading, setLoading] = useState(true)
-//   const [error, setError] = useState<string | null>(null)
-
-//   useEffect(() => {
-//     const fetchDocuments = async () => {
-//       try {
-//         const { data } = await supabase.from("documents").select()
-//         setDocuments(data)
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "Failed to fetch documents")
-//       } finally {
-//         setLoading(false)
-//       }
-//     }
-
-//     fetchDocuments()
-//   }, [])
-
-//   return { documents, loading, error }
-// }
-
-// // ---------- Notifications ----------
-// export function useNotifications(userId?: string) {
-//   const [notifications, setNotifications] = useState([])
-//   const [loading, setLoading] = useState(true)
-//   const [error, setError] = useState<string | null>(null)
-
-//   useEffect(() => {
-//     const fetchNotifications = async () => {
-//       try {
-//         const { data } = await supabase.from("notifications").select().eq("user_id", userId)
-//         setNotifications(data)
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "Failed to fetch notifications")
-//       } finally {
-//         setLoading(false)
-//       }
-//     }
-
-//     fetchNotifications()
-//   }, [userId])
-
-//   const markAsRead = async (notificationId: string) => {
-//     try {
-//       await supabase.from("notifications").update({ read: true }).eq("id", notificationId)
-//       setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)))
-//     } catch (err) {
-//       setError(err instanceof Error ? err.message : "Failed to mark notification as read")
-//     }
-//   }
-
-//   return { notifications, loading, error, markAsRead }
-// }
 "use client"
 
 import { useState, useEffect } from "react"
-// IMPORT SEMUA TIPE DATA YANG DIPERLUKAN DARI FILE MOCK
+// --- PERBAIKAN: Impor fungsi spesifik, BUKAN seluruh objek supabase ---
 import {
-  supabase,
+  getEmployees,
+  getLeaveRequests,
+  submitLeaveRequest,
+  getAttendanceRecords,
+  checkIn,
+  checkOut,
+  getDocuments,
+  getNotifications,
+  markNotificationAsRead,
   type Employee,
   type LeaveRequest,
   type AttendanceRecord,
   type Document,
   type Notification,
-} from "@/lib/supabase"
+} from "@/lib/supabase" // Pastikan path ini benar
 
-// ---------- Generic Hook (Tidak perlu diubah, sudah bagus) ----------
+// ---------- Generic Hook (Tidak perlu diubah) ----------
 export function useSupabaseData() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -244,46 +47,32 @@ export function useSupabaseData() {
 
 // ---------- Employees ----------
 export function useEmployees() {
-  // TAMBAHKAN TIPE Employee[]
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        setLoading(true)
-        // PANGGIL FUNGSI MOCK LANGSUNG
-        const data = await supabase.getEmployees()
-        setEmployees(data || []) // Beri fallback jika data null
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch employees")
-      } finally {
-        setLoading(false)
-      }
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true)
+      // --- PERBAIKAN: Panggil fungsi 'getEmployees' secara langsung ---
+      const data = await getEmployees()
+      setEmployees(data || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch employees")
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchEmployees()
   }, [])
 
-  const refetch = async () => {
-     setLoading(true);
-     try {
-       const data = await supabase.getEmployees();
-       setEmployees(data || []);
-     } catch (err) {
-       setError(err instanceof Error ? err.message : "Failed to refetch employees");
-     } finally {
-       setLoading(false);
-     }
-  }
-
-  return { employees, loading, error, refetch }
+  return { employees, loading, error, refetch: fetchEmployees }
 }
 
 // ---------- Leave Requests ----------
 export function useLeaveRequests(employeeId?: string) {
-  // TAMBAHKAN TIPE LeaveRequest[]
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -293,8 +82,8 @@ export function useLeaveRequests(employeeId?: string) {
     const fetchLeaveRequests = async () => {
       try {
         setLoading(true)
-        // PANGGIL FUNGSI MOCK LANGSUNG
-        const data = await supabase.getLeaveRequests(employeeId)
+        // --- PERBAIKAN: Panggil fungsi 'getLeaveRequests' secara langsung ---
+        const data = await getLeaveRequests(employeeId)
         setLeaveRequests(data || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch leave requests")
@@ -306,11 +95,11 @@ export function useLeaveRequests(employeeId?: string) {
     fetchLeaveRequests()
   }, [employeeId])
 
-  const submitLeaveRequest = async (request: Omit<LeaveRequest, "id" | "created_at" | "updated_at">) => {
+  const submitNewLeaveRequest = async (request: Omit<LeaveRequest, "id" | "created_at" | "updated_at">) => {
     try {
       setLoading(true)
-      // PANGGIL FUNGSI MOCK LANGSUNG
-      const newRequest = await supabase.submitLeaveRequest(request)
+      // --- PERBAIKAN: Panggil fungsi 'submitLeaveRequest' secara langsung ---
+      const newRequest = await submitLeaveRequest(request)
       if (newRequest) {
         setLeaveRequests((prev) => [newRequest, ...prev])
       }
@@ -323,12 +112,11 @@ export function useLeaveRequests(employeeId?: string) {
     }
   }
 
-  return { leaveRequests, loading, error, submitLeaveRequest }
+  return { leaveRequests, loading, error, submitLeaveRequest: submitNewLeaveRequest }
 }
 
 // ---------- Attendance ----------
-export function useAttendance(employeeId?: string) {
-  // TAMBAHKAN TIPE AttendanceRecord[]
+export function useAttendance(employeeId?: string, employeeName?: string) {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -338,8 +126,8 @@ export function useAttendance(employeeId?: string) {
     const fetchAttendance = async () => {
       try {
         setLoading(true)
-        // PANGGIL FUNGSI MOCK LANGSUNG
-        const data = await supabase.getAttendanceRecords(employeeId)
+        // --- PERBAIKAN: Panggil fungsi 'getAttendanceRecords' secara langsung ---
+        const data = await getAttendanceRecords(employeeId)
         setAttendance(data || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch attendance")
@@ -351,11 +139,12 @@ export function useAttendance(employeeId?: string) {
     fetchAttendance()
   }, [employeeId])
 
-  const checkIn = async (employeeId: string) => {
+  const handleCheckIn = async () => {
+    if (!employeeId || !employeeName) return null;
     try {
       setLoading(true)
-      // PANGGIL FUNGSI MOCK LANGSUNG
-      const newRecord = await supabase.checkIn(employeeId)
+      // --- PERBAIKAN: Panggil fungsi 'checkIn' secara langsung ---
+      const newRecord = await checkIn(employeeId, employeeName)
       if (newRecord) {
         setAttendance((prev) => [newRecord, ...prev])
       }
@@ -368,11 +157,11 @@ export function useAttendance(employeeId?: string) {
     }
   }
 
-  const checkOut = async (employeeId: string) => {
+  const handleCheckOut = async (attendanceId: string) => {
     try {
       setLoading(true)
-      // PANGGIL FUNGSI MOCK LANGSUNG
-      const updatedRecord = await supabase.checkOut(employeeId)
+       // --- PERBAIKAN: Panggil fungsi 'checkOut' secara langsung ---
+      const updatedRecord = await checkOut(attendanceId)
       if (updatedRecord) {
         setAttendance((prev) =>
           prev.map((a) => (a.id === updatedRecord.id ? updatedRecord : a))
@@ -387,12 +176,11 @@ export function useAttendance(employeeId?: string) {
     }
   }
 
-  return { attendance, loading, error, checkIn, checkOut }
+  return { attendance, loading, error, checkIn: handleCheckIn, checkOut: handleCheckOut }
 }
 
 // ---------- Documents ----------
 export function useDocuments() {
-  // TAMBAHKAN TIPE Document[]
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -401,8 +189,8 @@ export function useDocuments() {
     const fetchDocuments = async () => {
       try {
         setLoading(true)
-        // PANGGIL FUNGSI MOCK LANGSUNG
-        const data = await supabase.getDocuments()
+        // --- PERBAIKAN: Panggil fungsi 'getDocuments' secara langsung ---
+        const data = await getDocuments()
         setDocuments(data || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch documents")
@@ -419,7 +207,6 @@ export function useDocuments() {
 
 // ---------- Notifications ----------
 export function useNotifications(userId?: string) {
-  // TAMBAHKAN TIPE Notification[]
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading]=useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -429,8 +216,8 @@ export function useNotifications(userId?: string) {
     const fetchNotifications = async () => {
       try {
         setLoading(true)
-        // PANGGIL FUNGSI MOCK LANGSUNG
-        const data = await supabase.getNotifications(userId)
+        // --- PERBAIKAN: Panggil fungsi 'getNotifications' secara langsung ---
+        const data = await getNotifications(userId)
         setNotifications(data || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch notifications")
@@ -442,17 +229,17 @@ export function useNotifications(userId?: string) {
     fetchNotifications()
   }, [userId])
 
-  const markAsRead = async (notificationId: string) => {
+  const handleMarkAsRead = async (notificationId: string) => {
     try {
-      // PANGGIL FUNGSI MOCK LANGSUNG
-      await supabase.markNotificationAsRead(notificationId)
+      // --- PERBAIKAN: Panggil fungsi 'markNotificationAsRead' secara langsung ---
+      await markNotificationAsRead(notificationId)
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true, isRead: true } : n))
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to mark notification as read")
     }
   }
 
-  return { notifications, loading, error, markAsRead }
+  return { notifications, loading, error, markAsRead: handleMarkAsRead }
 }
