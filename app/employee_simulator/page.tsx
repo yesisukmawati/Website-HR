@@ -1,8 +1,8 @@
 "use client"
 
-import { LeaveRequestSimulator } from "@/components/employee/leave-request-simulator"
-import { Sidebar } from "@/components/layout/sidebar"
-import { Header } from "@/components/layout/header"
+import { LeaveRequestSimulator } from "../components/employee/leave-request-simulator"
+import { Sidebar } from "../components/layout/sidebar"
+import { Header } from "../components/layout/header"
 
 export default function EmployeeSimulatorPage() {
   return (

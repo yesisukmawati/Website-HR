@@ -1,4 +1,4 @@
-import { LeaveRequestForm } from "@/components/leave-request-form"
+import { LeaveRequestForm } from "../components/leave-request-form"
 
 export default function LeaveRequestPage() {
   return (
